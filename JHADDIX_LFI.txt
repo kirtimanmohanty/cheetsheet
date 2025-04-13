@@ -108,6 +108,17 @@ database.php
 data.php
 dbase.php a
 db.php
+C:/inetpub/wwwroot/web.config
+c:/home/site/wwwroot/web.config
+c:/inetpub/wwwroot/web.config
+c:/windows/microsoft.net/framework/v2.0.50727/asp.netwebadminfiles/web.config
+c:/windows/microsoft.net/framework/v2.0.50727/config/web.config
+c:/windows/microsoft.net/framework/v4.0.30319/asp.netwebadminfiles/web.config
+c:/windows/microsoft.net/framework/v4.0.30319/config/web.config
+c:/windows/microsoft.net/framework64/v2.0.50727/asp.netwebadminfiles/web.config
+c:/windows/microsoft.net/framework64/v2.0.50727/config/web.config
+c:/windows/microsoft.net/framework64/v4.0.30319/asp.netwebadminfiles/web.config
+c:/windows/microsoft.net/framework64/v4.0.30319/config/web.config
 ../../../../../../../dev
 /D:\Program Files\
 d:\System32\Inetsrv\metabase.xml

