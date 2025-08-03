@@ -22,6 +22,8 @@ Try subdomain takeover
 	after finding subdomain check subdomain takeover using the tool subjack
 	subjack -w domain.txt -v
 	subzy run --targets sub.txt
+	If you found 404 response try to use dig <url> CNAME, if you found the url in CNAME then try to exploite. 
+	Refer - https://infosecwriteups.com/404-to-root-how-a-forgotten-subdomain-led-to-server-takeover-%EF%B8%8F-d60e65fdbc18
 -----------------------------------------------
 Analyze js file
 -------------------
@@ -36,7 +38,7 @@ Method-3 From favicon hash https://favicon-hash.kmsec.uk/ > Use the hash for sea
 Method-4 Check the Hash and URL in every search engine like hunter.how, shodan, fofa, censys, zoomeye etc..
 Method-5 check in virustotal
 			curl -s "https://www.virustotal.com/vtapi/v2/domain/report?domain=company.com&apikey=key" | jq -r '..| .ip_address? // empty' | grep -Eo '([0-9]{1,3}\.){3}[0-9]{1,3}'
-
+		If your getting multiple ip the check this method >> cat origin_ip.txt | httpx -td -sc -title -server
 Collect IPs from all 5 methods and check one by one on both port 80 and 443 (check with http and https), you can use nmap also for this.
 After finding the currect IP just update the host entries. for linux its in /etc/hosts.
 --------------------------------------------------------------------------
@@ -110,6 +112,36 @@ To know the end point url of mass domain or single domain
 	Run the https://github.com/orwagodfather/virustotalx ( before this need to set Api keys)
 	./tool.sh subdomain.txt | tee results.txt 
 	cat results.txt | egrep 'http|https' > endpoints.txt
+	
+3. One line command:
+Basic Subdomain Discovery
+	subfinder -d example.com -all -recursive > subexample.com.txt
+Live Subdomain Filtering
+	cat subexample.com.txt | httpx-toolkit -ports 80,443,8080,8000,8888 -threads 200 > subexample.coms_alive.txt
+Subdomain Takeover Check
+	subzy run --targets subexample.coms.txt --concurrency 100 --hide_fails --verify_ssl
+Passive URL Collection
+	katana -u subexample.coms_alive.txt -d 5 -ps -pss waybackarchive,commoncrawl,alienvault -kf -jc -fx -ef woff,css,png,svg,jpg,woff2,jpeg,gif,svg -o allurls.txt
+Advanced URL Fetching
+	echo example.com | katana -d 5 -ps -pss waybackarchive,commoncrawl,alienvault -f qurl | urldedupe >output.txt
+	katana -u https://example.com -d 5 | grep '=' | urldedupe | anew output.txt
+	cat output.txt | sed 's/=.*/=/' >final.txt
+GAU URL Collection
+	echo example.com | gau --mc 200 | urldedupe >urls.txt
+	cat urls.txt | grep -E ".php|.asp|.aspx|.jspx|.jsp" | grep '=' | sort > output.txt
+	cat output.txt | sed 's/=.*/=/' >final.txt
+Sensitive File Detection
+	cat allurls.txt | grep -E "\.xls|\.xml|\.xlsx|\.json|\.pdf|\.sql|\.doc|\.docx|\.pptx|\.txt|\.zip|\.tar\.gz|\.tgz|\.bak|\.7z|\.rar|\.log|\.cache|\.secret|\.db|\.backup|\.yml|\.gz|\.config|\.csv|\.yaml|\.md|\.md5"
+Information Disclosure Dork
+	site:*.example.com (ext:doc OR ext:docx OR ext:odt OR ext:pdf OR ext:rtf OR ext:ppt OR ext:pptx OR ext:csv OR ext:xls OR ext:xlsx OR ext:txt OR ext:xml OR ext:json OR ext:zip OR ext:rar OR ext:md OR ext:log OR ext:bak OR ext:conf OR ext:sql)
+Git Repository Detection
+	cat example.coms.txt | grep "SUCCESS" | gf urls | httpx-toolkit -sc -server -cl -path "/.git/" -mc 200 -location -ms "Index of" -probe
+Information Disclosure Scanner
+	echo https://example.com | getallurls | grep -E "\.(xls|xml|xlsx|json|pdf|sql|doc|docx|pptx|txt|zip|tar\.gz|tgz|bak|7z|rar|log|cache|secret|db|backup|yml|gz|config|csv|yaml|md|md5|tar|xz|7zip|p12|pem|key|crt|csr|sh|pl|py|java|class|jar|war|ear|sqlitedb|sqlite3|dbf|db3|accdb|mdb|sqlcipher|gitignore|env|ini|conf|properties|plist|cfg)$"
+API Key Finder
+	cat allurls.txt | grep -E "\.js$" | httpx-toolkit -mc 200 -content-type | grep -E "application/javascript|text/javascript" | cut -d' ' -f1 | xargs -I% curl -s % | grep -E "(API_KEY|api_key|apikey|secret|token|password)"
+AWS S3 Bucket Finder
+	s3scanner scan -d example.com
 -------------------------------------------------------------------------------------------------------------------------------
 If you found ds store file check with this tool - https://github.com/lijiejie/ds_store_exp
 -------------------------------------------------------------------------------------------------------------------------------
@@ -583,6 +615,7 @@ wpscan --url target.com --disable-tls-checks --api-token <api-token> -e at -e ap
 api token- rwtrkrbx7Blx8uu3araD3NkSvffSVXaWTQlGEnT4GjY
 
 If you get xmlrpc.php enabled then try this
+https://infosecwriteups.com/how-hackers-abuse-xml-rpc-to-launch-bruteforce-and-ddos-attacks-40be5b310960
 https://the-bilal-rizwan.medium.com/wordpress-xmlrpc-php-common-vulnerabilites-how-to-exploit-them-d8d3c8600b32
 
 FTP
@@ -960,6 +993,7 @@ ASP.NET ViewState without MAC enabled (Burp extention - view state)( If you foun
 
 ASP.NET RCE via viewstate
 ------------------------
+Read before test - https://www.claranet.com/us/blog/2019-06-13-exploiting-viewstate-deserialization-using-blacklist3r-and-ysoserialnet
 Use Burp extention - view state
 Using the extention we get MAC is enabled or desabled (try to check in every POST endpoint);
 1. If disabled: 
