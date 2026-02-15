@@ -16,7 +16,18 @@ Subdomain finder
 	assetfinder -subs-only domain.com > asset.txt
 	sublist3r -d domain.com -o subdomain.txt 
 	virus total - curl -s "https://www.virustotal.com/vtapi/v2/domain/report?domain=company.com&apikey=key" | jq -r '.domain_siblings[]'
+	ffuf -w brue_subdomains.txt -u http://FUZZ.target.com -H "Host: FUZZ.target.com" -mc 200-204,400-405,500
+	Remove Duplecates URLs - cat asset.txt | urldedupe > assets.txt
 	---------------------------------
+Check if the target is using IIS server:
+-------------------------------------------
+intitle:"IIS Windows Server" Site:*.target.com
+Using Shodan - ssl:"Target" http.title:"IIS"
+	ssl.cert.subject.CN:"Target" http.title:"IIS"
+	ssl.cert.subject:"Target" http.title:"IIS"
+Fqfa - server="Microsoft-IIS/7.5" && domain="target.com"
+----------------------------------------------------
+
 Try subdomain takeover
 ------------------------
 	after finding subdomain check subdomain takeover using the tool subjack
@@ -51,6 +62,11 @@ Check for s3 discosure
 	https://medium.com/@janijay007/s3-bucket-misconfiguration-from-basics-to-pawn-6893776d1007
 	if you found some azure https://payatu.com/blog/azure-storage-security/#What_is_Azure_Storage_Service
 	https://infosecwriteups.com/how-i-pwned-a-million-dollar-company-9fa5bfd234dd
+	
+S3 enumuation:
+------------
+https://www.yeswehack.com/learn-bug-bounty/abusing-s3-bucket-permissions
+https://infosecwriteups.com/s3-bucket-misconfigured-access-controls-to-critical-vulnerability-6b535e3df9a5
 --------------------------------
 Find which subdomain are live
 -------------------------------------
@@ -123,14 +139,14 @@ Subdomain Takeover Check
 Passive URL Collection
 	katana -u subexample.coms_alive.txt -d 5 -ps -pss waybackarchive,commoncrawl,alienvault -kf -jc -fx -ef woff,css,png,svg,jpg,woff2,jpeg,gif,svg -o allurls.txt
 Advanced URL Fetching
-	echo example.com | katana -d 5 -ps -pss waybackarchive,commoncrawl,alienvault -f qurl | urldedupe >output.txt
-	katana -u https://example.com -d 5 | grep '=' | urldedupe | anew output.txt
-	cat output.txt | sed 's/=.*/=/' >final.txt
+	echo example.com | katana -d 5 -ps -pss waybackarchive,commoncrawl,alienvault -f qurl | urldedupe > output.txt
+	katana -u https://example.com -d 5 | grep '=' | urldedupe >> anew output.txt
+	cat output.txt | sed 's/=.*/=/' > final.txt
 GAU URL Collection
 	echo example.com | gau --mc 200 | urldedupe >urls.txt
 	cat urls.txt | grep -E ".php|.asp|.aspx|.jspx|.jsp" | grep '=' | sort > output.txt
 	cat output.txt | sed 's/=.*/=/' >final.txt
-Sensitive File Detection
+Sensitive File Detection 
 	cat allurls.txt | grep -E "\.xls|\.xml|\.xlsx|\.json|\.pdf|\.sql|\.doc|\.docx|\.pptx|\.txt|\.zip|\.tar\.gz|\.tgz|\.bak|\.7z|\.rar|\.log|\.cache|\.secret|\.db|\.backup|\.yml|\.gz|\.config|\.csv|\.yaml|\.md|\.md5"
 Information Disclosure Dork
 	site:*.example.com (ext:doc OR ext:docx OR ext:odt OR ext:pdf OR ext:rtf OR ext:ppt OR ext:pptx OR ext:csv OR ext:xls OR ext:xlsx OR ext:txt OR ext:xml OR ext:json OR ext:zip OR ext:rar OR ext:md OR ext:log OR ext:bak OR ext:conf OR ext:sql)
@@ -145,6 +161,31 @@ AWS S3 Bucket Finder
 -------------------------------------------------------------------------------------------------------------------------------
 If you found ds store file check with this tool - https://github.com/lijiejie/ds_store_exp
 -------------------------------------------------------------------------------------------------------------------------------
+File Upload Google Dorks
+----------------------
+site:domain.com "Select File"
+site:domain.com "Browse"
+site:domain.com "Drag and drop your file"
+site:domain.com "Attach File"
+site:domain.com "Select files"
+site:domain.com "File upload"
+site:domain.com "Upload your file"
+site:domain.com "Submit File"
+site:domain.com "Upload Documents"
+site:domain.com "Upload Image"
+site:domain.com "Drop files here to upload"
+site:domain.com "Choose files to upload"
+site:domain.com "Add File"
+site:domain.com "Upload PDF"
+site:domain.com "Upload Video"
+site:domain.com "Upload Photo"
+site:domain.com "Import File"
+site:domain.com "Upload Resume"
+site:domain.com "Upload files"
+site:domain.com "Upload and Submit"
+site:domain.com "Choose a file"
+site:domain.com "Click to upload"
+site:domain.com "Choose an image to upload"
 		
 One line command 
 ----------------------
@@ -438,13 +479,6 @@ After capture the request see the authontication server by seeing Host and Once 
 
 create a user using manual abc@gmail.com then using same mail use oauth.
 
-passwd for bruteforce-https://github.com/danielmiessler/SecLists?source=post_page-----ec25f7f12e6d--------------------------------
-dirsearch 
-search parameter- https://github.com/s0md3v/Arjun?source=post_page-----ec25f7f12e6d--------------------------------
-check which method is supporting to the application in nmap -p 443 --script http-methods <ip>
-curl -v -X TRACE http://www.yourserver.com
-
-
 ssrf
 ----------
 0.0.0.0:8080/test
@@ -464,12 +498,7 @@ https://pentester.land/
 https://bugbountyforum.com/tools/
 encoding-
 https://www.degraeve.com/reference/urlencoding.php
-
-
-
-crossdomain.xml--read a blog
 -------------------------------
-
 HTTP Methods
 ------------------
 Enabled HTTP PUT method leads to create malicious file on the server:
@@ -479,6 +508,7 @@ Enabled HTTP PUT method leads to create malicious file on the server:
 	curl --upload-file <file name> -v --url <target ip> -0 --http1.0
 	Observe that the file is uploaded without any problem
 	Try to lead to code execution using the malicious file
+	curl -v -X TRACE http://www.yourserver.com
 
 LDAP injection: (Check in login page and search field)
 ----------------------
@@ -593,9 +623,11 @@ Account takeover
 4. If we forget password and we reseceive a mail to click here and the link contain token then go to the google and search for "hash analyzer" if the hash is found please check for the hash of the username, id etc.. by using particular hash generator eg- md5 generator. if match click on the forget password password and enter the victim mail to generate a token the you change the token with hash.
 5. Using sign up functionality.(if we create an account with existing mail)
 6. (host header poising)	Click on reset the password on the application > Intercept the HTTP request in Burp Suite > Change the Host field to www.evilsite.com > If step 3 	doesn’t work out then add a new header X-Forwarded-Host: evil.com in the request. > The user will get a link like http://evil.com/reset_password/token when they click on it, and the attacker receive the reset password token and hijack the user account.
-7. Chage mail address in burp or add mail (eg:- "emil1@gmail.com,fakeemail@gmail.com","emil1@gmail.com@fakeemail@gmail.com","emil1@gmail.com%00:fakeemail@gmail.com, victim@gmail.tld!0a!0dcc:attacker@gmail.tl" we can use @,space | hexa etc..)
+7. Chage mail address in burp or add mail (eg:- "emil1@gmail.com,fakeemail@gmail.com","emil1@gmail.com@fakeemail@gmail.com","emil1@gmail.com%00:fakeemail@gmail.com, victim@gmail.tld!0a!0dcc:attacker@gmail.tl, email=victim@gmail.com&email=attacker@gmail.com, email=victim@gmail.com,cc: attacker@gmail.com, email=victim@gmail.com\ncc: attacker@gmail.com, {"email": "victim@gmail.com", "email":"attacker@gmail.com"}, {"email": ["victim@gmail.com", "attacker@gmail.com"]}, email=“victim@mail.com$%0a%0d$cc: attacker@mail.com, user[email][]=victim@gmail.com&user[email][]=attacker@gmail.com " we can use @,space | hexa etc..)
 8. via otp bypass
-
+9. Using punycode, create a account with any@gmail.com.1234.burpcollabrator.com then try to open another account with any@gmail.com.1234.burpcolàbrator.com ( note the a is replace with à) if you see email already exist it means the application is vulnerable.
+	refer - https://infosecwriteups.com/the-most-underrated-0-click-account-takeover-using-punycode-idn-attacks-c0afdb74a3dc
+	you get the punycode here - https://github.com/coffinxp/scripts/blob/main/punycode_gen.py
 
 
 SSTI
@@ -823,7 +855,6 @@ For detct vulnerability try out detect map placed in ak's resource folder.
 	
 		Exploit front end security control
 			for CL.TE vulnerability
-						for exploit TE.CL use like this
 														Content-Length: 139
 														Transfer-Encoding: chunked
 
@@ -870,8 +901,8 @@ For detct vulnerability try out detect map placed in ak's resource folder.
 			Host: vulnerable.com
 			Content-Length: 6
 		
-		If it is 404 like response then it is vulnerabile to h2.cl https://portswigger.net/web-security/request-smuggling/advanced/lab-request-smuggling-h2-cl-request-smuggling , https://www.youtube.com/watch?v=n2k5zdA0ycg&t=1s
 	
+		If it is 404 like response then it is vulnerabile to h2.cl https://portswigger.net/web-security/request-smuggling/advanced/lab-request-smuggling-h2-cl-request-smuggling , https://www.youtube.com/watch?v=n2k5zdA0ycg&t=1s
 	H2.TE attack:
 		H2.CL attack:
 		use request like this (one is hhtp2 and below is http1.1) to detect H2.TE
@@ -946,20 +977,12 @@ Jenkins Pentest:
 https://cloud.hacktricks.xyz/pentesting-ci-cd/jenkins-security
 https://github.com/gquere/pwn_jenkins
 
-S3 enumuation:
-------------
-https://www.yeswehack.com/learn-bug-bounty/abusing-s3-bucket-permissions
-https://infosecwriteups.com/s3-bucket-misconfigured-access-controls-to-critical-vulnerability-6b535e3df9a5
-
 Note:
 after install a go file this is instll in /go/bin/name
 then you can copy this file to /usr/bin
 cp /go/bin/name /usr/bin
 
 to find ip to host use the tool "hakip2host"
-
-create multi account
-check 2fa bypass using reset functionality
 
 .git file disclosure
 -----------------
@@ -980,7 +1003,6 @@ Check IF Application's tech stack is ASP.NET
 -------------------------------------------
 Server Banner Exposed (server version)
 Lack of Security Headers (hsts,csp,x-xss,iframe etc.)
-Default Page Found (/iisstart.htm) check for exploit if found
 Version 4.0.30319 Vulnerable ( X-ASPNET-Version)
 Improper Error Handling (stack trace)
 ASP.NET Trace.AXD Information Leak (/trace.axd)
@@ -988,7 +1010,6 @@ Directory Listing
 WSDL Disclosure
 ASP.NET debugging enabled (DEBUG in method and in header Command: stop-debug)
 XSS (domain.com/(Z("onerror="alert%601%60"))/exist.aspx, domain.com/(Z("onerror="confirm%60Redirect%20Login%60"))/exist.aspx)
-Microsoft IIS Tilde Character Short File/Folder Name Disclosure (Burp extention IIS tide enumuration scanner)
 ASP.NET ViewState without MAC enabled (Burp extention - view state)( If you found check for RCE by below reference)
 
 ASP.NET RCE via viewstate
@@ -1010,10 +1031,15 @@ Using the extention we get MAC is enabled or desabled (try to check in every POS
 	b. replace the <viewstate> to viewstate= parameter value  in the source replace the <__VIEWSTATEGENERATOR> to __VIEWSTATEGENERATOR= parameter value  in the source
 -----------------------------------------------------------------------------------------------------------------------------------------------------------------------	
 
-If the application uses IIS server then try this tool
+IIS Check list:
 ----------------------------------------------------------
-https://github.com/sw33tLie/sns?tab=readme-ov-file
+Use this tool - https://github.com/sw33tLie/sns?tab=readme-ov-file
 
+1. if you found default iis page kindly check these 2 endpoints - /haproxy and /netdata
+2. Default Page Found (/iisstart.htm) check for exploit if found
+3. Microsoft IIS Tilde Character Short File/Folder Name Disclosure (Burp extention IIS tide enumuration scanner)
+	tool for shorname - shortscan
+	Use - shortscan https:target.com -F
 Temp mail
 ---------
 tamp mail
@@ -1026,3 +1052,10 @@ Read for wireless PT - https://allabouttesting.org/wifi-penetration-testing-chec
 
 thin client pen testing:
 https://medium.com/@m14r41/thick-client-pentesting-guide-95529a980ea4
+
+If you found swagger.json
+---------------------------
+please check out this https://blog.vidocsecurity.com/blog/hacking-swagger-ui-from-xss-to-account-takeovers
+Try these two tools - https://github.com/intruder-io/autoswagger
+					https://github.com/BishopFox/sj
+					
