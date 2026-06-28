@@ -37,6 +37,8 @@ Subdomain finder
 	
 	assetfinder -subs-only domain.com > asset.txt
 	
+	curl -s "https://crt.sh/?q=domain.com&output=json" | jq -r '.[].name_value' | sed 's/\*\.//g' | sort -u >> asset.txt
+	
 	sublist3r -d domain.com -o subdomain.txt 
 	
 	virus total - curl -s "https://www.virustotal.com/vtapi/v2/domain/report?domain=company.com&apikey=key" | jq -r '.domain_siblings[]'
@@ -183,6 +185,8 @@ Advanced URL Fetching
 	echo example.com | katana -d 5 -ps -pss waybackarchive,commoncrawl,alienvault -f qurl | urldedupe > output.txt
 	katana -u https://example.com -d 5 | grep '=' | urldedupe >> output.txt
 	cat output.txt | sed 's/=.*/=/' > final.txt
+	Also try - curl -s 'https://web .archive.org/cdx/search/cdx?url=testphp.vulnweb.com/*&output=text&fl=original&collapse=urlkey&filter=statuscode:200' | grep -viP '\.(png|jpg|jpeg|gif|svg|ico|pdf|css|mp4|woff2?|ttf|eot)(\?|$)' | sed 's/:80\//\//' | sort -u
+	Check on Neobotnet.com
 GAU URL Collection
 	echo example.com | gau --mc 200 | urldedupe >urls.txt
 	cat urls.txt | grep -E ".php|.asp|.aspx|.jspx|.jsp" | grep '=' | sort > output.txt
